@@ -13,4 +13,9 @@ describe("Get products list handler", () => {
     expect(actualValue).toEqual(mResponse);
     expect(productsLambdaSpy).toHaveBeenCalled();
   });
+
+  test("should return response", async () => {
+    const actualValue = await productsLambda.handler();
+    expect(actualValue.statusCode).toEqual(200);
+  });
 });
