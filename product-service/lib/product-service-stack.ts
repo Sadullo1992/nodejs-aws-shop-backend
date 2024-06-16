@@ -1,9 +1,9 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as apigateway from "aws-cdk-lib/aws-apigateway";
 import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { Runtime } from "aws-cdk-lib/aws-lambda";
 
 export class ProductServiceStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -20,17 +20,19 @@ export class ProductServiceStack extends cdk.Stack {
 
     // Create our Lambda functions to handle requests
     const productsLambda = new NodejsFunction(this, "ProductsLambda", {
-      entry: "lambda-functions/getProductsList.ts",
-      handler: "handler",
+      runtime: Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset("lambda-functions"),
+      handler: "getProductsList.handler",
     });
 
     const productLambda = new NodejsFunction(this, "ProductLambda", {
-      entry: "resources/endpoints/getProductsById.ts",
-      handler: "handler",
+      runtime: Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset("lambda-functions"),
+      handler: "getProductsById.handler",
     });
 
     // Define our API Gateway endpoints
-    const products = api.root.addResource("posts");
+    const products = api.root.addResource("products");
     const product = products.addResource("{id}");
 
     // Connect our Lambda functions to our API Gateway endpoints
