@@ -1,0 +1,65 @@
+openapi: 3.0.0
+info:
+  title: Product Service
+  description: Api for shop products
+  version: 1.0.0
+
+servers:
+  - url: https://b5jvn4jw71.execute-api.eu-north-1.amazonaws.com/prod
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        title:
+          type: string
+          example: "Mac Pro 14"
+        description:
+          type: string
+          example: "Something about product"
+        price:
+          type: number
+          example: 999
+paths:
+  /products:
+    get:
+      tags:
+        - Product
+      summary: Get all products
+      description: Gets all products
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+  /products/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Product
+      summary: Get single product by id
+      description: Get single product by id
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        400:
+          description: Bad request. productId is invalid
+        404:
+          description: Product not found
