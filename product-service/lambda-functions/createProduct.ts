@@ -41,9 +41,12 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
     },
   };
 
+  const transactParams = {
+    TransactItems: [{ Put: productsParams }, { Put: stockParams }],
+  };
+
   try {
-    await db.put(productsParams);
-    await db.put(stockParams);
+    await db.transactWrite(transactParams);
     return sendResponse(201, {
       message: "Product is created",
     });
