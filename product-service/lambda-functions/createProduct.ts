@@ -19,7 +19,7 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
 
   const item =
     typeof event.body == "object" ? event.body : JSON.parse(event.body);
-    
+
   const id = randomUUID();
 
   const productsParams = {
@@ -52,7 +52,7 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
   } catch (dbError) {
     return {
       statusCode: 500,
-      body: `DB Error: ${dbError}`,
+      body: JSON.stringify({ message: `DynamoDB Error: ${dbError}` }),
     };
   }
 };
