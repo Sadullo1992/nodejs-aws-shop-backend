@@ -1,7 +1,11 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
+import {
+  Cors,
+  LambdaIntegration,
+  RestApi,
+} from "aws-cdk-lib/aws-apigateway";
 import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
@@ -59,12 +63,24 @@ export class ProductServiceStack extends cdk.Stack {
       },
     });
 
+    const createProductLambda = new NodejsFunction(this, "CreateProductLambda", {
+      runtime: Runtime.NODEJS_20_X,
+      code: lambda.Code.fromAsset("lambda-functions"),
+      handler: "createProduct.handler",
+      environment: {
+        PRODUCTS_TABLE_NAME: productsTable.tableName,
+        STOCK_TABLE_NAME: stockTable.tableName,
+      },
+    });
+
     // Grant our Lambda functions access to our DynamoDB table
     productsTable.grantReadWriteData(productsLambda);
     productsTable.grantReadWriteData(productLambda);
+    productsTable.grantReadWriteData(createProductLambda);
 
     stockTable.grantReadWriteData(productsLambda);
     stockTable.grantReadWriteData(productLambda);
+    stockTable.grantReadWriteData(createProductLambda);
 
     // Define our API Gateway endpoints
     const products = api.root.addResource("products");
@@ -73,9 +89,11 @@ export class ProductServiceStack extends cdk.Stack {
     // Connect our Lambda functions to our API Gateway endpoints
     const productsIntegration = new LambdaIntegration(productsLambda);
     const productIntegration = new LambdaIntegration(productLambda);
+    const createProductIntegration = new LambdaIntegration(createProductLambda);
 
     // Define our API Gateway methods
     products.addMethod("GET", productsIntegration);
+    products.addMethod("POST", createProductIntegration);
     product.addMethod("GET", productIntegration);
   }
 }
