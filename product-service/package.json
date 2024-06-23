@@ -9,7 +9,8 @@
     "watch": "tsc -w",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "fill:tables": "ts-node ./lambda-functions/handleFillTables.ts"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.140",
