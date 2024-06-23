@@ -10,6 +10,9 @@ const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME || "";
 const db = DynamoDBDocument.from(new DynamoDB());
 
 exports.handler = async (event: APIGatewayProxyEvent) => {
+  console.log("ENVIRONMENT VARIABLES\n" + JSON.stringify(process.env, null, 2));
+  console.info("EVENT\n" + JSON.stringify(event, null, 2));
+
   if (!event.body)
     return sendResponse(400, {
       message: "Invalid request, you are missing the parameter body",

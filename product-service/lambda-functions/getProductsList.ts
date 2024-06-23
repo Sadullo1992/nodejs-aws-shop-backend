@@ -1,3 +1,4 @@
+import { APIGatewayProxyEvent } from "aws-lambda";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import { sendResponse } from "./sendResponse";
@@ -7,7 +8,10 @@ const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME || "";
 
 const db = DynamoDBDocument.from(new DynamoDB());
 
-exports.handler = async () => {
+exports.handler = async (event: APIGatewayProxyEvent) => {
+  console.log("ENVIRONMENT VARIABLES\n" + JSON.stringify(process.env, null, 2));
+  console.info("EVENT\n" + JSON.stringify(event, null, 2));
+
   const productsParams = {
     TableName: PRODUCTS_TABLE_NAME,
   };
