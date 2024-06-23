@@ -12,11 +12,6 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
   if (!event.body)
     return {
       statusCode: 400,
-      headers: {
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT",
-      },
       body: JSON.stringify({
         message: "Invalid request, you are missing the parameter body",
       }),
@@ -24,6 +19,7 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
 
   const item =
     typeof event.body == "object" ? event.body : JSON.parse(event.body);
+    
   const id = randomUUID();
 
   const productsParams = {
@@ -49,21 +45,13 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
     await db.put(stockParams);
     return {
       statusCode: 201,
-      headers: {
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT",
-      },
-      body: "Product is created",
+      body: JSON.stringify({
+        message: "Product is created",
+      }),
     };
   } catch (dbError) {
     return {
       statusCode: 500,
-      headers: {
-        "Access-Control-Allow-Headers": "Content-Type",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT",
-      },
       body: `DB Error: ${dbError}`,
     };
   }
