@@ -1,14 +1,7 @@
 import * as cdk from "aws-cdk-lib";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import {
-  Cors,
-  IResource,
-  LambdaIntegration,
-  MockIntegration,
-  PassthroughBehavior,
-  RestApi,
-} from "aws-cdk-lib/aws-apigateway";
+import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
@@ -39,6 +32,10 @@ export class ProductServiceStack extends cdk.Stack {
     // Create our API Gateway
     const api = new RestApi(this, "ProductsRestAPI", {
       restApiName: "ProductsRestAPI",
+      defaultCorsPreflightOptions: {
+        allowOrigins: Cors.ALL_ORIGINS,
+        allowMethods: Cors.ALL_METHODS,
+      },
     });
 
     // Create our Lambda functions to handle requests
@@ -89,10 +86,6 @@ export class ProductServiceStack extends cdk.Stack {
     const products = api.root.addResource("products");
     const product = products.addResource("{id}");
 
-    // Add CORS
-    addCorsOptions(products);
-    addCorsOptions(product);
-
     // Connect our Lambda functions to our API Gateway endpoints
     const productsIntegration = new LambdaIntegration(productsLambda);
     const productIntegration = new LambdaIntegration(productLambda);
@@ -103,46 +96,4 @@ export class ProductServiceStack extends cdk.Stack {
     products.addMethod("POST", createProductIntegration);
     product.addMethod("GET", productIntegration);
   }
-}
-
-export function addCorsOptions(apiResource: IResource) {
-  apiResource.addMethod(
-    "OPTIONS",
-    new MockIntegration({
-      // In case you want to use binary media types, uncomment the following line
-      // contentHandling: ContentHandling.CONVERT_TO_TEXT,
-      integrationResponses: [
-        {
-          statusCode: "200",
-          responseParameters: {
-            "method.response.header.Access-Control-Allow-Headers":
-              "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'",
-            "method.response.header.Access-Control-Allow-Origin": "'*'",
-            "method.response.header.Access-Control-Allow-Credentials":
-              "'false'",
-            "method.response.header.Access-Control-Allow-Methods":
-              "'OPTIONS,GET,PUT,POST,DELETE'",
-          },
-        },
-      ],
-      // In case you want to use binary media types, comment out the following line
-      passthroughBehavior: PassthroughBehavior.NEVER,
-      requestTemplates: {
-        "application/json": '{"statusCode": 200}',
-      },
-    }),
-    {
-      methodResponses: [
-        {
-          statusCode: "200",
-          responseParameters: {
-            "method.response.header.Access-Control-Allow-Headers": true,
-            "method.response.header.Access-Control-Allow-Methods": true,
-            "method.response.header.Access-Control-Allow-Credentials": true,
-            "method.response.header.Access-Control-Allow-Origin": true,
-          },
-        },
-      ],
-    }
-  );
 }

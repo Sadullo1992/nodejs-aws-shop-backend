@@ -1,6 +1,7 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
+import { sendResponse } from "./sendResponse";
 
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE_NAME || "";
 const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME || "";
@@ -11,12 +12,9 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
   const requestedItemId = event.pathParameters?.id;
 
   if (!requestedItemId)
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        message: "Error: You are missing the path parameter id",
-      }),
-    };
+    return sendResponse(400, {
+      message: "Error: You are missing the path parameter id",
+    });
 
   const productsParams = {
     TableName: PRODUCTS_TABLE_NAME,
@@ -38,11 +36,7 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
     const product = productRes.Item;
     const stock = stockRes.Item;
 
-    if (!product)
-      return {
-        statusCode: 404,
-        body: JSON.stringify({ message: "Product not found" }),
-      };
+    if (!product) return sendResponse(404, { message: "Product not found" });
 
     const count = !stock ? 0 : stock.count;
 
@@ -51,14 +45,8 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
       count,
     };
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(productWithCount),
-    };
+    return sendResponse(200, productWithCount);
   } catch (dbError) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: `DynamoDB Error: ${dbError}` }),
-    };
+    return sendResponse(500, { message: `DynamoDB Error: ${dbError}` });
   }
 };

@@ -1,5 +1,6 @@
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
+import { sendResponse } from "./sendResponse";
 
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE_NAME || "";
 const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME || "";
@@ -32,14 +33,8 @@ exports.handler = async () => {
       };
     });
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(productsWithCount),
-    };
+    return sendResponse(200, productsWithCount);
   } catch (dbError) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: `DynamoDB Error: ${dbError}` }),
-    };
+    return sendResponse(500, { message: `DynamoDB Error: ${dbError}` });
   }
 };

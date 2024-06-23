@@ -2,6 +2,7 @@ import { APIGatewayProxyEvent } from "aws-lambda";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
 import { randomUUID } from "crypto";
+import { sendResponse } from "./sendResponse";
 
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE_NAME || "";
 const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME || "";
@@ -10,12 +11,9 @@ const db = DynamoDBDocument.from(new DynamoDB());
 
 exports.handler = async (event: APIGatewayProxyEvent) => {
   if (!event.body)
-    return {
-      statusCode: 400,
-      body: JSON.stringify({
-        message: "Invalid request, you are missing the parameter body",
-      }),
-    };
+    return sendResponse(400, {
+      message: "Invalid request, you are missing the parameter body",
+    });
 
   const item =
     typeof event.body == "object" ? event.body : JSON.parse(event.body);
@@ -43,16 +41,10 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
   try {
     await db.put(productsParams);
     await db.put(stockParams);
-    return {
-      statusCode: 201,
-      body: JSON.stringify({
-        message: "Product is created",
-      }),
-    };
+    return sendResponse(201, {
+      message: "Product is created",
+    });
   } catch (dbError) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ message: `DynamoDB Error: ${dbError}` }),
-    };
+    return sendResponse(500, { message: `DynamoDB Error: ${dbError}` });
   }
 };
