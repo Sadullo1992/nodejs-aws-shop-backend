@@ -4,6 +4,7 @@ import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
+import { LambdaDestination } from "aws-cdk-lib/aws-s3-notifications";
 import { Construct } from "constructs";
 
 export class ImportServiceStack extends cdk.Stack {
@@ -42,9 +43,26 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
+    const parseProductsLambda = new NodejsFunction(
+      this,
+      "ParseProductsLambda",
+      {
+        runtime: Runtime.NODEJS_20_X,
+        code: lambda.Code.fromAsset("lambda-functions"),
+        handler: "importFileParser.handler",
+        environment: {
+          BUCKET_NAME: bucket.bucketName,
+        },
+      }
+    );
+
     // Allow lambda function to bucket
     bucket.grantPut(importProductsLambda);
     bucket.grantReadWrite(importProductsLambda);
+
+    bucket.grantPut(parseProductsLambda);
+    bucket.grantReadWrite(parseProductsLambda);
+    bucket.grantDelete(parseProductsLambda);
 
     // Define our API Gateway endpoints
     const importProductsResource = api.root.addResource("import");
@@ -55,6 +73,12 @@ export class ImportServiceStack extends cdk.Stack {
     );
 
     // Define our API Gateway methods
-    importProductsResource.addMethod('GET', importProductsIntegration);
+    importProductsResource.addMethod("GET", importProductsIntegration);
+
+    // Notifying lambda When new file appeared in s3 bucket
+    const notification = new LambdaDestination(parseProductsLambda);
+    bucket.addEventNotification(s3.EventType.OBJECT_CREATED, notification, {
+      prefix: "uploaded/",
+    });
   }
 }
