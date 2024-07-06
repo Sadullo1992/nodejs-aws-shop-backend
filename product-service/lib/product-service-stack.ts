@@ -94,6 +94,11 @@ export class ProductServiceStack extends cdk.Stack {
         code: lambda.Code.fromAsset("lambda-functions"),
         functionName: "CatalogBatchProcessLambda",
         handler: "catalogBatchProcess.handler",
+        environment: {
+          queueUrl: catalogItemsQueue.queueUrl,
+          PRODUCTS_TABLE_NAME: productsTable.tableName,
+          STOCK_TABLE_NAME: stockTable.tableName,
+        },
       }
     );
 
@@ -101,10 +106,12 @@ export class ProductServiceStack extends cdk.Stack {
     productsTable.grantReadWriteData(productsLambda);
     productsTable.grantReadWriteData(productLambda);
     productsTable.grantReadWriteData(createProductLambda);
+    productsTable.grantReadWriteData(catalogBatchProcessLambda);
 
     stockTable.grantReadWriteData(productsLambda);
     stockTable.grantReadWriteData(productLambda);
     stockTable.grantReadWriteData(createProductLambda);
+    stockTable.grantReadWriteData(catalogBatchProcessLambda);
 
     // Define our API Gateway endpoints
     const products = api.root.addResource("products");
@@ -147,6 +154,8 @@ export class ProductServiceStack extends cdk.Stack {
     // Create an SQS event source
     const eventSource = new SqsEventSource(catalogItemsQueue, { batchSize: 5 });
     catalogBatchProcessLambda.addEventSource(eventSource);
+
+    catalogItemsQueue.grantConsumeMessages(catalogBatchProcessLambda)
 
   }
 }
