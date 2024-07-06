@@ -1,6 +1,8 @@
 import * as cdk from "aws-cdk-lib";
+import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import {
   Cors,
   LambdaIntegration,
@@ -44,6 +46,11 @@ export class ProductServiceStack extends cdk.Stack {
       },
     });
 
+    // Create SQS queue
+    const catalogItemsQueue = new sqs.Queue(this, "CatalogItemsQueue", {
+      queueName: "CatalogItemsQueue",
+    });
+
     // Create our Lambda functions to handle requests
     const productsLambda = new NodejsFunction(this, "ProductsLambda", {
       runtime: Runtime.NODEJS_20_X,
@@ -76,6 +83,17 @@ export class ProductServiceStack extends cdk.Stack {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCK_TABLE_NAME: stockTable.tableName,
         },
+      }
+    );
+
+    const catalogBatchProcessLambda = new NodejsFunction(
+      this,
+      "CatalogBatchProcessLambda",
+      {
+        runtime: Runtime.NODEJS_20_X,
+        code: lambda.Code.fromAsset("lambda-functions"),
+        functionName: "CatalogBatchProcessLambda",
+        handler: "catalogBatchProcess.handler",
       }
     );
 
@@ -125,5 +143,10 @@ export class ProductServiceStack extends cdk.Stack {
     });
 
     product.addMethod("GET", productIntegration);
+
+    // Create an SQS event source
+    const eventSource = new SqsEventSource(catalogItemsQueue, { batchSize: 5 });
+    catalogBatchProcessLambda.addEventSource(eventSource);
+
   }
 }
