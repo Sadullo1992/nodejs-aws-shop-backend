@@ -1,7 +1,9 @@
 import * as cdk from "aws-cdk-lib";
 import * as sqs from "aws-cdk-lib/aws-sqs";
+import * as sns from "aws-cdk-lib/aws-sns";
 import { Construct } from "constructs";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import {
   Cors,
@@ -55,6 +57,14 @@ export class ProductServiceStack extends cdk.Stack {
       exportName: "catalog-items-queue-arn",
     });
 
+    // Create SNS Topic
+    const createProductTopic = new sns.Topic(this, "CreateProductTopic", {
+      topicName: "CreateProductTopic",
+    });
+    createProductTopic.addSubscription(
+      new EmailSubscription("sadulloburiyev@gmail.com")
+    );
+
     // Create our Lambda functions to handle requests
     const productsLambda = new NodejsFunction(this, "ProductsLambda", {
       runtime: Runtime.NODEJS_20_X,
@@ -99,12 +109,12 @@ export class ProductServiceStack extends cdk.Stack {
         functionName: "CatalogBatchProcessLambda",
         handler: "catalogBatchProcess.handler",
         environment: {
-          queueUrl: catalogItemsQueue.queueUrl,
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCK_TABLE_NAME: stockTable.tableName,
+          SNS_TOPIC_ARN: createProductTopic.topicArn
         },
       }
-    );    
+    );
 
     // Grant our Lambda functions access to our DynamoDB table
     productsTable.grantReadWriteData(productsLambda);
@@ -159,7 +169,9 @@ export class ProductServiceStack extends cdk.Stack {
     const eventSource = new SqsEventSource(catalogItemsQueue, { batchSize: 5 });
     catalogBatchProcessLambda.addEventSource(eventSource);
 
-    catalogItemsQueue.grantConsumeMessages(catalogBatchProcessLambda)
+    catalogItemsQueue.grantConsumeMessages(catalogBatchProcessLambda);
 
+    // Allow to publish
+    createProductTopic.grantPublish(catalogBatchProcessLambda);
   }
 }
