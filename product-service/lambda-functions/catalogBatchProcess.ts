@@ -11,9 +11,10 @@ const db = DynamoDBDocument.from(new DynamoDB());
 const snsClient = new SNSClient({});
 
 exports.handler = async (event: SQSEvent) => {
-  const snsProducts = [];
+  
 
   for (const record of event.Records) {
+    const snsProducts = [];
     if (!record?.body)
       console.error("Invalid request, you are missing the parameter body");
 
@@ -51,18 +52,27 @@ exports.handler = async (event: SQSEvent) => {
     } catch (dbError) {
       console.log(dbError);
     }
+
+    const snsMessage = JSON.stringify({
+      message: "Products added",
+      products: snsProducts,
+    });
+
+    const publishCommand = new PublishCommand({
+      TopicArn: SNS_TOPIC_ARN,
+      Message: snsMessage,
+      MessageAttributes: {
+        price: {
+          DataType: 'Number',
+          StringValue: `${price}`
+        }
+      }
+    });
+
+    const response = await snsClient.send(publishCommand);
+    console.log("SNS_Message: ", snsMessage);
+    console.log("MESSAGE_ID: ", response.MessageId);
   }
 
-  const snsMessage = JSON.stringify({
-    message: "Products added",
-    products: snsProducts,
-  });
-
-  const publishCommand = new PublishCommand({
-    TopicArn: SNS_TOPIC_ARN,
-    Message: snsMessage,
-  });
-
-  const response = await snsClient.send(publishCommand);
-  console.log(response.MessageId);
+  
 };

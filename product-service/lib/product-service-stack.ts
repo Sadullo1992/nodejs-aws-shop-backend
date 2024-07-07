@@ -64,6 +64,15 @@ export class ProductServiceStack extends cdk.Stack {
     createProductTopic.addSubscription(
       new EmailSubscription("sadulloburiyev@gmail.com")
     );
+    createProductTopic.addSubscription(
+      new EmailSubscription("sadulloburiyev1992@gmail.com", {        
+        filterPolicy: {
+          price: sns.SubscriptionFilter.numericFilter({
+            lessThan: 500,
+          }),
+        },
+      })
+    );
 
     // Create our Lambda functions to handle requests
     const productsLambda = new NodejsFunction(this, "ProductsLambda", {
@@ -111,7 +120,7 @@ export class ProductServiceStack extends cdk.Stack {
         environment: {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCK_TABLE_NAME: stockTable.tableName,
-          SNS_TOPIC_ARN: createProductTopic.topicArn
+          SNS_TOPIC_ARN: createProductTopic.topicArn,
         },
       }
     );
