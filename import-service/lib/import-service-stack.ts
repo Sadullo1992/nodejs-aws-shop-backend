@@ -1,5 +1,6 @@
 import * as cdk from "aws-cdk-lib";
 import { aws_s3 as s3 } from "aws-cdk-lib";
+import * as sqs from "aws-cdk-lib/aws-sqs";
 import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
@@ -28,6 +29,11 @@ export class ImportServiceStack extends cdk.Stack {
         allowMethods: Cors.ALL_METHODS,
       },
     });
+
+    // Import sqs
+    const queueArn = cdk.Fn.importValue("catalog-items-queue-arn");
+    const queue = sqs.Queue.fromQueueArn(this, 'CatalogItemsQueueInstance', queueArn);
+
 
     // Create lambda function
     const importProductsLambda = new NodejsFunction(
@@ -80,5 +86,8 @@ export class ImportServiceStack extends cdk.Stack {
     bucket.addEventNotification(s3.EventType.OBJECT_CREATED, notification, {
       prefix: "uploaded/",
     });
+
+    // Allow send message to queue
+    queue.grantSendMessages(parseProductsLambda);
   }
 }
