@@ -50,6 +50,10 @@ export class ProductServiceStack extends cdk.Stack {
     const catalogItemsQueue = new sqs.Queue(this, "CatalogItemsQueue", {
       queueName: "CatalogItemsQueue",
     });
+    new cdk.CfnOutput(this, "catalog-items-queue-arn", {
+      value: catalogItemsQueue.queueArn,
+      exportName: "catalog-items-queue-arn",
+    });
 
     // Create our Lambda functions to handle requests
     const productsLambda = new NodejsFunction(this, "ProductsLambda", {
@@ -100,7 +104,7 @@ export class ProductServiceStack extends cdk.Stack {
           STOCK_TABLE_NAME: stockTable.tableName,
         },
       }
-    );
+    );    
 
     // Grant our Lambda functions access to our DynamoDB table
     productsTable.grantReadWriteData(productsLambda);
