@@ -14,7 +14,7 @@ exports.handler = async (event: APIGatewayProxyEvent) => {
 
   const productDto = JSON.parse(event.body);
 
-  const isValidDto = validateProductDto(event.body);
+  const isValidDto = validateProductDto(productDto);
 
   if (!isValidDto)
     return sendResponse(400, {
