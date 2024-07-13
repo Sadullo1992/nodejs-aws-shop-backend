@@ -1,7 +1,7 @@
 import { APIGatewayProxyEvent } from "aws-lambda";
 import { DynamoDBDocument } from "@aws-sdk/lib-dynamodb";
 import { DynamoDB } from "@aws-sdk/client-dynamodb";
-import { sendResponse } from "./sendResponse";
+import { sendResponse } from "./helpers/sendResponse";
 
 const PRODUCTS_TABLE_NAME = process.env.PRODUCTS_TABLE_NAME || "";
 const STOCK_TABLE_NAME = process.env.STOCK_TABLE_NAME || "";

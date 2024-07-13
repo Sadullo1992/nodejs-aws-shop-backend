@@ -9,8 +9,6 @@ import {
   Cors,
   LambdaIntegration,
   RestApi,
-  Model,
-  JsonSchemaType,
 } from "aws-cdk-lib/aws-apigateway";
 import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -145,32 +143,9 @@ export class ProductServiceStack extends cdk.Stack {
     const productIntegration = new LambdaIntegration(productLambda);
     const createProductIntegration = new LambdaIntegration(createProductLambda);
 
-    // Validate creation product body
-    const createProductSchema = new Model(this, "CreateProductSchema", {
-      restApi: api,
-      contentType: "application/json",
-      schema: {
-        type: JsonSchemaType.OBJECT,
-        properties: {
-          title: { type: JsonSchemaType.STRING },
-          description: { type: JsonSchemaType.STRING },
-          price: { type: JsonSchemaType.NUMBER },
-          count: { type: JsonSchemaType.NUMBER },
-        },
-        required: ["title", "description", "price", "count"],
-      },
-    });
-
     // Define our API Gateway methods
     products.addMethod("GET", productsIntegration);
-    products.addMethod("POST", createProductIntegration, {
-      requestModels: {
-        "application/json": createProductSchema,
-      },
-      requestValidatorOptions: {
-        validateRequestBody: true,
-      },
-    });
+    products.addMethod("POST", createProductIntegration);
 
     product.addMethod("GET", productIntegration);
 
