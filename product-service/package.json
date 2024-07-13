@@ -10,7 +10,7 @@
     "test": "jest",
     "test:coverage": "jest catalogBatchProcess.test.ts --coverage",
     "cdk": "cdk",
-    "fill:tables": "ts-node ./lambda-functions/handleFillTables.ts"
+    "fill:tables": "ts-node ./lambda-functions/helpers/handleFillTables.ts"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.140",

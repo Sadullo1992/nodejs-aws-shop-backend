@@ -1,13 +1,6 @@
-export interface IProduct {
-  id: string;
-  title: string;
-  description?: string;
-  price: number;
-  count: number;
-}
-
 export const products = [
   {
+    description: "Its very awesome",
     price: 200,
     title: "Product 2",
     count: 2,
