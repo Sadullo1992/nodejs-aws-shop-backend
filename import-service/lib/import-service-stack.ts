@@ -1,7 +1,13 @@
 import * as cdk from "aws-cdk-lib";
 import { aws_s3 as s3 } from "aws-cdk-lib";
 import * as sqs from "aws-cdk-lib/aws-sqs";
-import { Cors, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
+import {
+  AuthorizationType,
+  Cors,
+  LambdaIntegration,
+  RestApi,
+  TokenAuthorizer,
+} from "aws-cdk-lib/aws-apigateway";
 import * as lambda from "aws-cdk-lib/aws-lambda";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -32,8 +38,11 @@ export class ImportServiceStack extends cdk.Stack {
 
     // Import sqs
     const queueArn = cdk.Fn.importValue("catalog-items-queue-arn");
-    const queue = sqs.Queue.fromQueueArn(this, 'CatalogItemsQueueInstance', queueArn);
-
+    const queue = sqs.Queue.fromQueueArn(
+      this,
+      "CatalogItemsQueueInstance",
+      queueArn
+    );
 
     // Create lambda function
     const importProductsLambda = new NodejsFunction(
@@ -62,6 +71,19 @@ export class ImportServiceStack extends cdk.Stack {
       }
     );
 
+    // Instantiated lambda function
+    const basicAuthorizerLambda = lambda.Function.fromFunctionName(
+      this,
+      "ImportBasicAuthorizerLambda",
+      "BasicAuthorizerLambda"
+    );
+
+    // Create authorizer
+    const authorizer = new TokenAuthorizer(this, "BasicAuthorizer", {
+      handler: basicAuthorizerLambda,
+      identitySource: "method.request.header.Authorization",
+    });
+
     // Allow lambda function to bucket
     bucket.grantPut(importProductsLambda);
     bucket.grantReadWrite(importProductsLambda);
@@ -75,11 +97,32 @@ export class ImportServiceStack extends cdk.Stack {
 
     // Connect our Lambda functions to our API Gateway endpoints
     const importProductsIntegration = new LambdaIntegration(
-      importProductsLambda
+      importProductsLambda,
+      {
+        integrationResponses: [
+          {
+            responseParameters: {
+              "method.response.header.Access-Control-Allow-Origin": "'*'",
+            },
+            statusCode: "200",
+          },
+        ],
+      }
     );
 
     // Define our API Gateway methods
-    importProductsResource.addMethod("GET", importProductsIntegration);
+    importProductsResource.addMethod("GET", importProductsIntegration, {
+      authorizationType: AuthorizationType.CUSTOM,
+      authorizer,
+      methodResponses: [
+        {
+          statusCode: '200',
+          responseParameters: {
+            'method.response.header.Access-Control-Allow-Origin': true,
+          },
+        },
+      ],
+    });
 
     // Notifying lambda When new file appeared in s3 bucket
     const notification = new LambdaDestination(parseProductsLambda);
