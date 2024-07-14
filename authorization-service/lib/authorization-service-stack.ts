@@ -1,16 +1,29 @@
 import * as cdk from 'aws-cdk-lib';
+import { Code, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { ConfigProps } from './config';
+
+type AwsEnvStackProps = cdk.StackProps & {
+  config: Readonly<ConfigProps>;
+};
 
 export class AuthorizationServiceStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: AwsEnvStackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    // ENV config
+    const { config } = props;
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'AuthorizationServiceQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    // Create auth Lambda
+    new NodejsFunction(this, "BasicAuthorizerLambda", {
+      runtime: Runtime.NODEJS_20_X,
+      code: Code.fromAsset("lambda-functions"),
+      handler: "basicAuthorizer.handler",
+      functionName: "BasicAuthorizerLambda",
+      environment: {
+        [config.LOGIN]: config.PASSWORD,
+      },
+    });
   }
 }
