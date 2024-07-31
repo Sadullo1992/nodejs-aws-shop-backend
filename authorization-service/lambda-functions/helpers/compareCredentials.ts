@@ -1,8 +1,4 @@
-
-export const compareCredentials = (authorizationHeader: string) => {
-  const encodedCredentials = authorizationHeader.split(" ")[1];
-  console.log("ENCODED_CREDENTIALS", encodedCredentials);
-
+export const compareCredentials = (encodedCredentials: string) => {
   const decodedCredentials = Buffer.from(encodedCredentials, "base64").toString(
     "utf-8"
   );
