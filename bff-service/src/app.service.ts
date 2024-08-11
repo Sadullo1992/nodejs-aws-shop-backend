@@ -17,11 +17,16 @@ export class AppService {
     const baseURL = stripTrailingSlash(serviceUrl);
     const url = req.originalUrl.replace(`/${serviceName}`, '');
 
+    const headers =
+      req.headers.authorization ? { Authorization: req.headers.authorization }
+        : {};
+
     const config: AxiosRequestConfig = {
       url,
       baseURL,
       method: req.method,
       data: req.body,
+      headers,
     };
 
     

@@ -36,9 +36,8 @@ export class AppController {
       req,
     );
 
-    return res
-      .set(serviceRes.headers)
-      .status(serviceRes.status)
-      .send(serviceRes.data);
+    res.set(serviceRes.headers).status(serviceRes.status).send(serviceRes.data);
+
+    return res;
   }
 }
