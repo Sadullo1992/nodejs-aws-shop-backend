@@ -1,0 +1,7 @@
+**node_modules
+.*
+Dockerfile
+node.code-workspace
+README.md
+docker-compose.yml
+dist

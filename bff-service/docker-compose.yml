@@ -1,0 +1,13 @@
+services:
+  app:
+    container_name: app
+    restart: unless-stopped
+    build: .
+    ports:
+      - 80:${PORT}
+    env_file:
+      - .env
+    environment:
+      PORT: ${PORT}
+      product: ${product}
+      cart: ${cart}
