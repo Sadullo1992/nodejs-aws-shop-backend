@@ -13,10 +13,17 @@ import {
 import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
+import { ConfigProps } from "./config";
+
+type AwsEnvStackProps = cdk.StackProps & {
+  config: Readonly<ConfigProps>;
+};
 
 export class ProductServiceStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: AwsEnvStackProps) {
     super(scope, id, props);
+    // ENV config
+    const { config } = props;
 
     // Create our DynamoDB tables
     const productsTable = new Table(this, "products", {
@@ -63,7 +70,7 @@ export class ProductServiceStack extends cdk.Stack {
       new EmailSubscription("sadulloburiyev@gmail.com")
     );
     createProductTopic.addSubscription(
-      new EmailSubscription("sadulloburiyev1992@gmail.com", {        
+      new EmailSubscription("sadulloburiyev1992@gmail.com", {
         filterPolicy: {
           price: sns.SubscriptionFilter.numericFilter({
             lessThan: 500,
@@ -103,6 +110,7 @@ export class ProductServiceStack extends cdk.Stack {
         environment: {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCK_TABLE_NAME: stockTable.tableName,
+          UNSPLASH_ACCESS_KEY: config.UNSPLASH_ACCESS_KEY,
         },
       }
     );
@@ -119,6 +127,7 @@ export class ProductServiceStack extends cdk.Stack {
           PRODUCTS_TABLE_NAME: productsTable.tableName,
           STOCK_TABLE_NAME: stockTable.tableName,
           SNS_TOPIC_ARN: createProductTopic.topicArn,
+          UNSPLASH_ACCESS_KEY: config.UNSPLASH_ACCESS_KEY,
         },
       }
     );
