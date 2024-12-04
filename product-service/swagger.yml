@@ -1,0 +1,113 @@
+openapi: 3.0.0
+info:
+  title: Product Service
+  description: Api for shop products
+  version: 1.0.0
+
+servers:
+  - url: https://b5jvn4jw71.execute-api.eu-north-1.amazonaws.com/prod
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1"
+        title:
+          type: string
+          example: "Mac Pro 14"
+        description:
+          type: string
+          example: "Something about product"
+        price:
+          type: number
+          example: 999
+        count:
+          type: number
+          example: 999
+paths:
+  /products:
+    get:
+      tags:
+        - Product
+      summary: Get all products
+      description: Gets all products
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      tags:
+        - Product
+      summary: Create product
+      description: Creates a new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              title: example
+              properties:
+                title:
+                  type: string
+                  description: The product's title
+                description:
+                  type: string
+                  description: The product's description
+                price:
+                  type: number
+                  description: The product price
+                count:
+                  type: number
+                  description: The product count
+              required:
+                - title
+                - description
+                - price
+                - count
+      responses:
+        201:
+          description: The user has been created.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Product is created
+        400:
+          description: Bad request. body does not contain required fields
+        500:
+          description: Internal server error
+  /products/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Product
+      summary: Get single product by id
+      description: Get single product by id
+      responses:
+        200:
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        400:
+          description: Bad request. productId is invalid
+        404:
+          description: Product not found
